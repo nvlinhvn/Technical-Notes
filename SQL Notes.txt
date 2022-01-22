@@ -1,0 +1,38 @@
+If you need to aggregate your data in multiple different ways, the SQL GROUPING SETS construct is AMAZING for this.
+
+Here’s an example:
+
+Say you have a data set called daily_likes with the schema:
+
+user_id,
+operating_system,
+country,
+num_likes
+
+You want country-level aggregates, operating system-level aggregates, country and operating system-level aggregates, and an overall aggregate.
+
+You could do this with 4 queries which would be a lot of SQL to write. GROUPING SETS allows you to do it with 1 query.
+
+
+SELECT
+COALESCE(operating_system, ‘(overall)’) as operating_system,
+COALESCE(country, ‘(overall)’) as country,
+COUNT(DISTINCT user_id) as num_users,
+SUM(num_likes) as num_likes
+
+FROM daily_likes
+GROUP BY GROUPING SETS (
+(country, operating_system),
+(country),
+(operating_system),
+()
+)
+
+
+This query will give you all 4 aggregations in a very concise format. For aggregations where a dimension is ignored, it is NULL’d out and COALESCE’d to ‘(overall)’
+
+Make sure country and operating system are never null before doing this otherwise your aggregates will be weird!
+
+To get the overall aggregate add a WHERE clause. WHERE country = ‘(overall)’ and operating_system = ‘(overall)’
+
+Definitely try this out to build out blazing fast dashboards with pre-aggregated data!
